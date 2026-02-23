@@ -40,7 +40,7 @@ extern _throw_bad_arg_error
 
 
 
-;| MARK: Gen Norm
+;| MARK: Gen uNorm
 global gen_urandint
 gen_urandint: ; arg1 is RNGstate, arg2 is min, arg3 is max
     ; RESERVED: r10, r11 (for gen_rand64)
@@ -99,7 +99,7 @@ gen_urandint: ; arg1 is RNGstate, arg2 is min, arg3 is max
 
         MOV rdx,rax ; store result for multiplication
         MULX rax,r10,r8 ; rdx (rand64) * r8 (range), hi → rax, low → r9
-        CMP r10,r9 ; Compare low 64 bits against threshold
+        CMP r10,r9 ; compare low 64 bits against threshold
         JL .retry_rand
     ADD rax,rbx ; add min
     POP rbx
@@ -136,7 +136,31 @@ gen_urandintHQ: ; rcx is an RNGstate struct, rdx is min, and r8 is max
 
     .retry_rand: ;# NEEDS: rax, rdx, r11, r10, r9
         MOV rdx,r10
-        CALL gen_rand64HQ ;# NEEDS: rax, r11, r10, rcx → intact
+
+        ;| vvv GEN_RAND64HQ vvv
+        ;# NEEDS: rax, r11, r10, (rcx read only)
+        MOV rax,state0
+        IMUL rax,rax,5
+        ROL rax,7
+        IMUL rax,rax,9
+
+        MOV r11,state1
+        
+        ; s1 ^= s0;
+        XOR r11,qword state0
+        ; s0 = rotl(s0, 49) ^ s1 ^ (s1 << 21);
+        ROL qword state0,49
+        XOR qword state0,r11
+        MOV r10,r11
+        SHL r10,21
+        XOR qword state0,r10
+
+        ; s1 = rotl(s1, 28);
+        ROL r11,28
+
+        MOV state1,r11
+        ;| GEN_RAND64HQ
+
         MOV rdx,rax ; store result for multiplication
         MULX rax,r10,r8 ; rdx (rand64) * r8 (range), hi → rax, low → r9
         CMP r10,r9 ; Compare low 64 bits against threshold
@@ -160,6 +184,139 @@ gen_urandintHQ: ; rcx is an RNGstate struct, rdx is min, and r8 is max
     ;     }
     ; }
 
+
+;| MARK: Gen Norm
+global gen_randint
+gen_randint: ; arg1 is RNGstate, arg2 is min, arg3 is max
+    ; RESERVED: r10, r11 (for gen_rand64)
+    CMP arg2,arg3
+    JG call_bad_arg_order
+    JE ret_min
+
+    PUSH rbx
+
+    MOV rbx,rdx ; store min in rbx
+
+    SUB r8,rdx ; max - min (range)
+    ADD r8,1 ; make inclusive of max
+    MOV rax,r8 ; put range into rax
+    NEG rax ; (-range)
+    XOR rdx,rdx
+    DIV r8 ; (-range) % range, rdx holds remainder
+    MOV r9,rdx ; r9 holds threshold
+    ;# Unavailable:
+    ; r9 is threshold
+    ; r8 is range
+    ; rbx is min
+    ; rcx is RNGstate
+    ;# Available:
+    ; rax
+    ; rdx
+    ; r10
+    ; r11
+
+    .retry_rand: ;# NEEDS: rax, rdx, r11, r10, r9
+        MOV rdx,r10
+
+        ;| vvv GEN_RAND64 vvv
+        ; # NEEDS: rax, r11, r10, (rcx read only)
+        ; where state0 is [rcx] and state1 is [rcx + 8]
+        MOV rax,state0
+        ADD rax,state1
+        ROL rax,17
+        ADD rax,state0 ; now rax holds `result`
+        
+        MOV r11,state1
+
+        ; s1 ^= s0;
+        XOR r11,state0
+        ; s0 = rotl(s0, 49) ^ s1 ^ (s1 << 21);
+        ROL qword state0,49
+        XOR qword state0,r11
+        MOV r10,r11
+        SHL r10,21
+        XOR qword state0,r10
+
+        ; s1 = rotl(s1, 28);
+        ROL r11,28
+
+        MOV state1,r11
+        ;| ^^^ GEN_RAND64 ^^^ 
+
+        MOV rdx,rax ; store result for multiplication
+        MULX rax,r10,r8 ; rdx (rand64) * r8 (range), hi → rax, low → r10
+        CMP r10,r9 ; compare low 64 bits against threshold
+        JB .retry_rand
+    ADD rax,rbx ; add min
+    POP rbx
+    ret
+
+global gen_randintHQ
+gen_randintHQ: ; arg1 is RNGstate, arg2 is min, arg3 is max
+    ; RESERVED: r10, r11 (for gen_rand64)
+    CMP arg2,arg3
+    JG call_bad_arg_order
+    JE ret_min
+
+    PUSH rbx
+
+    MOV rbx,rdx ; store min in rbx
+
+    SUB r8,rdx ; max - min (range)
+    ADD r8,1 ; make inclusive of max
+    MOV rax,r8 ; put range into rax
+    NEG rax ; (-range)
+    XOR rdx,rdx
+    DIV r8 ; (-range) % range, rdx holds remainder
+    MOV r9,rdx ; r9 holds threshold
+    ;# Unavailable:
+    ; r9 is threshold
+    ; r8 is range
+    ; rbx is min
+    ; rcx is RNGstate
+    ;# Available:
+    ; rax
+    ; rdx
+    ; r10
+    ; r11
+
+    .retry_rand: ;# NEEDS: rax, rdx, r11, r10, r9
+        MOV rdx,r10
+
+        ;| vvv GEN_RAND64HQ vvv
+        ; # NEEDS: rax, r11, r10, (rcx read only)
+        MOV rax,state0
+        IMUL rax,rax,5
+        ROL rax,7
+        IMUL rax,rax,9
+
+        MOV r11,state1
+        
+        ; s1 ^= s0;
+        XOR r11,qword state0
+        ; s0 = rotl(s0, 49) ^ s1 ^ (s1 << 21);
+        ROL qword state0,49
+        XOR qword state0,r11
+        MOV r10,r11
+        SHL r10,21
+        XOR qword state0,r10
+
+        ; s1 = rotl(s1, 28);
+        ROL r11,28
+
+        MOV state1,r11
+        ;| ^^^ GEN_RAND64HQ ^^^ 
+
+        MOV rdx,rax ; store result for multiplication
+        MULX rax,r10,r8 ; rdx (rand64) * r8 (range), hi → rax, low → r10
+        CMP r10,r9 ; compare low 64 bits against threshold
+        JB .retry_rand
+    ADD rax,rbx ; add min
+    POP rbx
+    ret
+
+
+;| MARK: Gen Seed
 global gen_seed
 gen_seed:
     CMP arg1,arg2

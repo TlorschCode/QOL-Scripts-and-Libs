@@ -3,9 +3,9 @@
 Allows developers to quickly get their folder and file structure as json.
 
 ## Usage
-It is recommended to add the directory containing getFolderStructure.exe to your PATH.
+Note: It is recommended to add getFolderStructure.exe to your PATH for easy access.
 
-`cmd /k getFolderStructure.exe <directory> <max_depth>`
+Usage: `cmd /k getFolderStructure.exe <directory> <max_depth>`
 
 ## Results
 Outputs a json into the console, containing the folder and file structure of the given directory.
@@ -33,6 +33,5 @@ A `<max_depth>` of 1 will reveal those folders, and additionally what is inside 
         ...
   }
 }
+// And so on...
 ```
-
-And so on.
