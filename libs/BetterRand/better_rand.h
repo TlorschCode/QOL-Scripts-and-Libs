@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <cstddef>
 #include <stdexcept>
 #include <bit>
@@ -19,90 +19,143 @@ struct RNGstate {
 extern "C" {
 #endif
 
-using ui64 = uint64_t;
-using ui32 = uint32_t;
-using ui16 = uint16_t;
 
-constexpr __forceinline ui64 gen_rand64(RNGstate& state) {
-    const ui64 output = std::rotl<ui64>(state.state0 + state.state1, 17) + state.state0;
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Unsigned)
+constexpr __forceinline uint64_t gen_urand64(RNGstate& state) noexcept {
+    const uint64_t output = std::rotl<uint64_t>(state.state0 + state.state1, 17) + state.state0;
     state.state1 ^= state.state0;
-    state.state0 = std::rotl<ui64>(state.state0, 49) ^ state.state1 ^ (state.state1 << 21);
-    state.state1 = std::rotl<ui64>(state.state1, 28);
+    state.state0 = std::rotl<uint64_t>(state.state0, 49) ^ state.state1 ^ (state.state1 << 21);
+    state.state1 = std::rotl<uint64_t>(state.state1, 28);
     return output;
 }
 
-constexpr __forceinline ui64 gen_rand64HQ(RNGstate& state) {
-    const ui64 output = std::rotl<ui64>(state.state0 * 5, 7) * 9;
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro**`, which is higher quality (but slower) than `xoroshiro++`.
+// (Unsigned)
+constexpr __forceinline uint64_t gen_urand64HQ(RNGstate& state) noexcept {
+    const uint64_t output = std::rotl<uint64_t>(state.state0 * 5, 7) * 9;
     state.state1 ^= state.state0;
-    state.state0 = std::rotl<ui64>(state.state0, 49) ^ state.state1 ^ (state.state1 << 21);
-    state.state1 = std::rotl<ui64>(state.state1, 28);
+    state.state0 = std::rotl<uint64_t>(state.state0, 49) ^ state.state1 ^ (state.state1 << 21);
+    state.state1 = std::rotl<uint64_t>(state.state1, 28);
     return output;
 }
 
-static constexpr __forceinline ui64 rejectionSample(ui64 randNum, const ui64 range, const ui64 threshold) {
+static constexpr __forceinline uint64_t rejectionSample(uint64_t randNum, const uint64_t range, const uint64_t threshold) noexcept {
     using i128 = __int128_t;
-    ui64 hi;
-    ui64 low;
+    uint64_t hi;
+    uint64_t low;
     do {
         const i128 prod = static_cast<i128>(randNum) * static_cast<i128>(range);
-        low = static_cast<ui64>(prod);
+        low = static_cast<uint64_t>(prod);
         hi = prod >> 64;
     } while (low < threshold);
     return hi;
 }
 
-constexpr inline ui64 gen_urandint(RNGstate& state, ui64 _min, ui64 _max) {
+// Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Unsigned)
+constexpr inline uint64_t gen_urandint(RNGstate& state, uint64_t _min, uint64_t _max) noexcept {
     if (_min == _max) return _min;
-    const ui64 range = _max - _min + 1;
-    const ui64 threshold = (-range) % range;
-    return rejectionSample(gen_rand64(state), range, threshold);
+    const uint64_t range = _max - _min + 1;
+    const uint64_t threshold = (-range) % range;
+    return rejectionSample(gen_urand64(state), range, threshold);
 }
 
-constexpr inline ui64 gen_urandintHQ(RNGstate& state, ui64 _min, ui64 _max) {
+// Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
+// Uses `xoroshiro**`, which is higher quality (but slower) than `gen_randint`'s `xoroshiro++`.
+// (Unsigned)
+constexpr inline uint64_t gen_urandintHQ(RNGstate& state, uint64_t _min, uint64_t _max) noexcept {
     if (_min == _max) return _min;
-    const ui64 range = _max - _min + 1;
-    const ui64 threshold = (-range) % range;
-    return rejectionSample(gen_rand64HQ(state), range, threshold);
+    const uint64_t range = _max - _min + 1;
+    const uint64_t threshold = (-range) % range;
+    return rejectionSample(gen_urand64HQ(state), range, threshold);
 }
 
-__forceinline ui64 gen_seed64() {
-    ui64 result;
+// Generates a biasless, truly random number from 0 to 2^64 (inclusive) using assembly's `RDSEED` instruction.
+__forceinline uint64_t gen_seed64() noexcept {
+    uint64_t result;
     bool success;
     while (!(success = _rdseed64_step(&result)));
     return result;
 }
 
-__forceinline ui32 gen_seed32() {
-    ui32 result;
+// Generates a biasless, truly random number from 0 to 2^32 (inclusive) using assembly's `RDSEED` instruction.
+__forceinline uint32_t gen_seed32() noexcept {
+    uint32_t result;
     bool success;
     while (!(success = _rdseed32_step(&result)));
     return result;
 }
 
-__forceinline ui16 gen_seed16() {
-    ui16 result;
+// Generates a biasless, truly random number from 0 to 2^16 (inclusive) using assembly's `RDSEED` instruction.
+__forceinline uint16_t gen_seed16() noexcept {
+    uint16_t result;
     bool success;
     while (!(success = _rdseed16_step(&result)));
     return result;
 }
 
-constexpr inline ui64 gen_seed(uint64_t _min, uint64_t _max) {
+// Generates a biasless, truly random number using the `RDSEED` assembly instruction.
+//
+// It is recommended to use this to seed an RNG rather than act as a standalone one, since it is much slower than `gen_randint`/`gen_randint_fast` (which are pseudoRNG's).
+inline uint64_t gen_seed(uint64_t _min, uint64_t _max) noexcept {
     if (_min == _max) return _min;
-    const ui64 range = _max - _min + 1;
-    const ui64 threshold = (-range) % range;
+    const uint64_t range = _max - _min + 1;
+    const uint64_t threshold = (-range) % range;
     return rejectionSample(gen_seed64(), range, threshold);
 }
 
-constexpr inline ui64 splitmix64(ui64 num) {
+static constexpr inline uint64_t splitmix64(uint64_t num) noexcept {
     num += 0x9E3779B97F4A7C15;
     num = (num ^ (num >> 30)) * 0xBF58476D1CE4E5B9;
     num = (num ^ (num >> 27)) * 0x94D049BB133111EB;
     return num ^ (num >> 31);
 }
 
+// Seeds an RNGstate struct using a true random number generator (`RDSEED`) paired with `splitmix64`.
 inline void seed_state(RNGstate& state) {
     state.state0 = gen_seed64();
     state.state1 = splitmix64(state.state0);
+}
+
+
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Signed)
+constexpr __forceinline int64_t gen_rand64(RNGstate& state) {
+    return std::bit_cast<int64_t>(gen_urand64(state));
+}
+
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro**`, which is higher quality (but slower) than `xoroshiro++`.
+// (Unsigned)
+constexpr __forceinline int64_t gen_rand64HQ(RNGstate& state) {
+    return std::bit_cast<int64_t>(gen_urand64HQ(state));
+}
+
+// Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Signed)
+constexpr inline int64_t gen_randint(RNGstate& state, int64_t _min, int64_t _max) {
+    if (_min == _max) return _min;
+    const uint64_t range = static_cast<uint64_t>(_max) - static_cast<uint64_t>(_min) + 1;
+    const uint64_t threshold = (-range) % range;
+    const uint64_t offset = rejectionSample(gen_rand64(state), range, threshold);
+    return std::bit_cast<int64_t>(static_cast<uint64_t>(_min) + offset);
+}
+
+// Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
+// Uses `xoroshiro**`, which is higher quality than `gen_randint`'s `xoroshiro++`.
+// (Signed)
+constexpr inline int64_t gen_randintHQ(RNGstate& state, int64_t _min, int64_t _max) {
+    if (_min == _max) return _min;
+    const uint64_t range = static_cast<uint64_t>(_max) - static_cast<uint64_t>(_min) + 1;
+    const uint64_t threshold = (-range) % range;
+    const uint64_t offset = rejectionSample(gen_rand64HQ(state), range, threshold);
+    return std::bit_cast<int64_t>(static_cast<uint64_t>(_min) + offset);
 }
 
 #ifdef __cplusplus

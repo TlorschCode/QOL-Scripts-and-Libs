@@ -217,8 +217,25 @@ gen_seed64:
         JNC .try_seed ; carry flag is clear, so it did not succeed
     ret
 
+global gen_seed32
+gen_seed32:
+    .try_seed:
+        RDSEED eax
+        JNC .try_seed
+    ret
+
+global gen_seed16
+gen_seed16:
+    .try_seed:
+        RDSEED eax
+        JNC .try_sedd
+    ret
+
+
 global gen_rand64
-gen_rand64: ;# USES: rax, rcx, r10, r11
+global gen_urand64
+gen_rand64: ; code for signed vs unsigned is no different in asm
+gen_urand64: ;# USES: rax, rcx, r10, r11
     ; result = rotl(s0 + s1, 17) + s0;
     MOV rax,state0
     ADD rax,state1
@@ -255,8 +272,10 @@ gen_rand64: ;# USES: rax, rcx, r10, r11
     ; }
 
 
+global gen_urand64HQ
 global gen_rand64HQ
-gen_rand64HQ: ;# USES: rax, rcx, r10, r11
+gen_rand64HQ: ; code for signed vs unsigned is no different in asm
+gen_urand64HQ: ;# USES: rax, rcx, r10, r11
     ; result = rotl(s0 * 5, 7) * 9;
     MOV rax,state0
     IMUL rax,rax,5

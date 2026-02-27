@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 #include <cstddef>
 #include <stdexcept>
 #include <bit>
@@ -15,113 +15,67 @@ struct RNGstate {
 extern "C" {
 #endif
 
-//? functions defined in asm
 
-using ui64 = uint64_t;
-using ui32 = uint32_t;
-using ui16 = uint16_t;
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Unsigned)
+extern inline uint64_t gen_urand64(RNGstate& state);
 
-//|MARK: Gen Normal
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Signed)
+extern inline int64_t gen_rand64(RNGstate& state);
 
-constexpr __forceinline ui64 norm_gen_rand64(RNGstate& state) {
-    const ui64 output = std::rotl<ui64>(state.state0 + state.state1, 17) + state.state0;
-    state.state1 ^= state.state0;
-    state.state0 = std::rotl<ui64>(state.state0, 49) ^ state.state1 ^ (state.state1 << 21);
-    state.state1 = std::rotl<ui64>(state.state1, 28);
-    return output;
-}
 
-constexpr __forceinline ui64 norm_gen_rand64HQ(RNGstate& state) {
-    const ui64 output = std::rotl<ui64>(state.state0 * 5, 7) * 9;
-    state.state1 ^= state.state0;
-    state.state0 = std::rotl<ui64>(state.state0, 49) ^ state.state1 ^ (state.state1 << 21);
-    state.state1 = std::rotl<ui64>(state.state1, 28);
-    return output;
-}
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro**`, which is higher quality (but slower) than `xoroshiro++`.
+// (Unsigned) 
+extern inline uint64_t gen_urand64HQ(RNGstate& state);
 
-static constexpr __forceinline ui64 rejectionSample(ui64 randNum, const ui64 range, const ui64 threshold) {
-    using i128 = __int128_t;
-    ui64 hi;
-    ui64 low;
-    do {
-        const i128 prod = static_cast<i128>(randNum) * static_cast<i128>(range);
-        low = static_cast<ui64>(prod);
-        hi = prod >> 64;
-    } while (low < threshold);
-    return hi;
-}
+// Generates a biasless random number between 0 and 2^64.
+// Uses `xoroshiro**`, which is higher quality (but slower) than `xoroshiro++`.
+// (Unsigned)
+extern inline int64_t gen_rand64HQ(RNGstate& state);
 
-constexpr inline ui64 norm_gen_urandint(RNGstate& state, ui64 _min, ui64 _max) {
-    if (_min == _max) return _min;
-    const ui64 range = _max - _min + 1;
-    const ui64 threshold = (-range) % range;
-    return rejectionSample(norm_gen_rand64(state), range, threshold);
-}
 
-constexpr inline ui64 norm_gen_urandintHQ(RNGstate& state, ui64 _min, ui64 _max) {
-    if (_min == _max) return _min;
-    const ui64 range = _max - _min + 1;
-    const ui64 threshold = (-range) % range;
-    return rejectionSample(norm_gen_rand64HQ(state), range, threshold);
-}
-
-__forceinline ui64 norm_gen_seed64() {
-    ui64 result;
-    bool success;
-    while (!(success = _rdseed64_step(&result)));
-    return result;
-}
-
-__forceinline ui32 norm_gen_seed32() {
-    ui32 result;
-    bool success;
-    while (!(success = _rdseed32_step(&result)));
-    return result;
-}
-
-__forceinline ui16 norm_gen_seed16() {
-    ui16 result;
-    bool success;
-    while (!(success = _rdseed16_step(&result)));
-    return result;
-}
-
-constexpr inline ui64 norm_gen_seed(uint64_t _min, uint64_t _max) {
-    if (_min == _max) return _min;
-    const ui64 range = _max - _min + 1;
-    const ui64 threshold = (-range) % range;
-    return rejectionSample(norm_gen_seed64(), range, threshold);
-}
 
 // Generates a biasless, truly random number using the `RDSEED` assembly instruction.
 //
-// It is recommended to use this to seed an RNG rather than act as a standalone one, since it is ~500x slower than `gen_randint`/`gen_randint_fast` (which are pseudoRNG's).
-extern inline uint64_t gen_seed(uint64_t min, uint64_t max);
+// It is recommended to use this to seed an RNG rather than act as a standalone one, since it is much slower than `gen_randint`/`gen_randint_fast` (which are pseudoRNG's).
+extern inline uint64_t gen_seed(uint64_t _min, uint64_t _max);
+
 
 // Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
 // Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
-extern inline uint64_t gen_urandint(RNGstate& state, uint64_t min, uint64_t max);
+// (Unsigned)
+extern inline uint64_t gen_urandint(RNGstate& state, uint64_t _min, uint64_t _max);
+
+// Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
+// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// (Signed)
+extern inline int64_t gen_randint(RNGstate& state, int64_t _min, int64_t _max);
+
+
+// Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
+// Uses `xoroshiro**`, which is higher quality (but slower) than `gen_randint`'s `xoroshiro++`.
+// (Unsigned)
+extern inline uint64_t gen_urandintHQ(RNGstate& state, uint64_t _min, uint64_t _max);
 
 // Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
 // Uses `xoroshiro**`, which is higher quality than `gen_randint`'s `xoroshiro++`.
-// Is ~15% slower than `gen_randint`.
-extern inline uint64_t gen_urandintHQ(RNGstate& state, uint64_t min, uint64_t max);
+// (Signed)
+extern inline int64_t gen_randintHQ(RNGstate& state, int64_t _min, int64_t _max);
+
 
 
 //| MARK: Gen 64
 
 // Generates a biasless, truly random number from 0 to 2^64 (inclusive) using assembly's `RDSEED` instruction.
 extern inline uint64_t gen_seed64();
-
-// Generates a high-quality, biasless random number from 0 to 2^64 (inclusive).
-// Uses a `xoroshiro++`, a general-purpose pseudoRNG.
-extern inline uint64_t gen_rand64(RNGstate& state);
-
-// Generates a high-quality, biasless random number from 0 to 2^64 (inclusive).
-// Uses a higher-quality pseudoRNG (`xoroshiro**`) than `gen_rand64`, which uses `xoroshiro++`.
-// Is ~15% slower than `gen_rand64`.
-extern inline uint64_t gen_rand64HQ(RNGstate& state);
-
+// Generates a biasless, truly random number from 0 to 2^32 (inclusive) using assembly's `RDSEED` instruction.
+extern inline uint64_t gen_seed32();
+// Generates a biasless, truly random number from 0 to 2^16 (inclusive) using assembly's `RDSEED` instruction.
+extern inline uint64_t gen_seed16();
 
 
 //|MARK: Seed State
