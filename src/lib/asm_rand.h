@@ -68,7 +68,7 @@ extern inline int64_t gen_randintHQ(RNGstate& state, int64_t _min, int64_t _max)
 
 
 
-//| MARK: Gen 64
+//| MARK: GenSeed
 
 // Generates a biasless, truly random number from 0 to 2^64 (inclusive) using assembly's `RDSEED` instruction.
 extern inline uint64_t gen_seed64();
