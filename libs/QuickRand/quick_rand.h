@@ -19,6 +19,7 @@ struct RNGstate {
 extern "C" {
 #endif
 
+namespace cplusplusimp {
 
 // Generates a biasless random number between 0 and 2^64.
 // Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
@@ -161,3 +162,4 @@ constexpr inline int64_t gen_randintHQ(RNGstate& state, int64_t _min, int64_t _m
 #ifdef __cplusplus
 }
 #endif
+}

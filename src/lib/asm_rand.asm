@@ -102,7 +102,7 @@ gen_randint:
         MOV rdx,rax ; store result for multiplication
         MULX rax,r10,r8 ; rdx (rand64) * r8 (range), hi → rax, low → r9
         CMP r10,r9 ; Compare low 64 bits against threshold
-        JL .retry_rand
+        JB .retry_rand ; unsigned comparison because the threshold and `low` are garaunteed to be unsigned
     ADD rax,rbx ; add min
     POP rbx
     ret
@@ -311,7 +311,7 @@ gen_randintHQ: ; rcx is an RNGstate struct, rdx is min, and r8 is max
         MOV rdx,rax ; store result for multiplication
         MULX rax,r10,r8 ; rdx (rand64) * r8 (range), hi → rax, low → r9
         CMP r10,r9 ; Compare low 64 bits against threshold
-        JL .retry_rand
+        JB .retry_rand ; unsigned comparison because the threshold and `low` are garaunteed to be unsigned
     ADD rax,rbx ; add min
     POP rbx
     ret

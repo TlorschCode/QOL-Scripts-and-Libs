@@ -1,6 +1,9 @@
 # AsmRand
 ## Purpose
-An assembly library allowing developers to get truly random/pseudorandom numbers.
+An extremely fast x86 ASM library allowing developers to get high quality true-random/pseudorandom numbers.
+
+> *Note*: While the code can be linked and compiled with C++, it is recommended to only use this ASM library for projects which require x86 ASM. There is an identically functioning but ~2x (1 ns) faster library written in C++. You can find it in this repo under `libs/QuickRand`.
+> It is faster due to the extreme optimizations the compiler can apply to C++ code, some of which are not feasibly possible to implement by hand. However, in some scenarios, if **not** compiled with -O3, this ASM random generator beats the C++ version for spead
 
 </br>
 
@@ -44,30 +47,38 @@ Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is w
 <h4 align="center">Results</h4>
 <hr style="height: 1.5px; margin-top: -5px">
 
-> *Note*: A test being unbounded means Lemire's rejection sampling was forgone entirely for that test.
+*(each is sorted from fastest to slowest)*
 
-*(sorted by group from fastest to slowest)*
+**Unbounded**:
+(Lemire's rejection sampling was forgone completely)
+| Algorithm | ~ns/call |
+| --- | --- |
+| C++ xoroshiro++ | 0.796
+| C++ xoroshiro** | 0.894
+| mt19937_64 | 1.440 |
+| ASM xoroshiro++ | 2.636
+| ASM xoroshiro** | 2.843
+| std::rand | 32.634
 
-| Algorithm | Bounded? | Bounds | ~ns/call |
-| --- | --- | --- | --- |
-| C++ xoroshiro++ | No | N/A | 0.796
-| C++ xoroshiro++ | Yes | 0-100 | 1.069
-| C++ xoroshiro++ | Yes | 0-1,000,000,123 | 1.071
-| C++ xoroshiro** | No | N/A | 0.894
-| C++ xoroshiro** | Yes | 0-100 | 1.234
-| C++ xoroshiro** | Yes | 0-1,000,000,123 | 1.229
-| mt19937_64 | No | N/A | 1.440 |
-| mt19937_64 | Yes | 0-100 | 1.349
-| mt19937_64 | Yes | 0-1,000,000,123 | 1.241
-| ASM xoroshiro++ | No | N/A | 2.636
-| ASM xoroshiro++ | Yes | 0-100 | 2.803
-| ASM xoroshiro++ | Yes | 0-1,000,000,123 | 2.737
-| ASM xoroshiro** | No | N/A | 2.843
-| ASM xoroshiro** | Yes | 0-100 | 2.877
-| ASM xoroshiro** | Yes | 0-1,000,000,123 | 2.902
-| std::rand | No | N/A | 32.634
-| std::rand | Yes | 0-100 | 32.470
-| std::rand | Yes | 0-1,000,000,123 | 34.560
+**Bounded (0-100)**:
+| Algorithm | ~ns/call |
+| --- | --- |
+| C++ xoroshiro++ | 1.053
+| C++ xoroshiro** | 1.234
+| mt19937_64 | 1.349
+| ASM xoroshiro++ | 2.803
+| ASM xoroshiro** | 2.877
+| std::rand | 32.470
+
+**Bounded (0-1,000,000,123)**:
+| Algorithm | ~ns/call |
+| --- | --- |
+| C++ xoroshiro++ | 1.071
+| C++ xoroshiro** | 1.064
+| mt19937_64 | 1.241
+| ASM xoroshiro++ | 2.737
+| ASM xoroshiro** | 2.902
+| std::rand | 34.560
 
 </br>
 

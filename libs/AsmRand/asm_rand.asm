@@ -1,4 +1,4 @@
-; FIRST
+; TODO: (is older than lib/asm_rand.asm). Update to lib/asm_rand.asm
 
 %define arg1 rcx
 %define arg2 rdx

@@ -6,10 +6,13 @@
 #include <concepts>
 #include <immintrin.h>
 
+#ifndef _RNGSTATE_DEF
+#define _RNGSTATE_DEF
 struct RNGstate {
     uint64_t state0;
     uint64_t state1;
 };
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,12 +20,12 @@ extern "C" {
 
 
 // Generates a biasless random number between 0 and 2^64.
-// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// Uses `xoroshiro++`, a general-purpose pseudoRNG algorithm.
 // (Unsigned)
 extern inline uint64_t gen_urand64(RNGstate& state);
 
 // Generates a biasless random number between 0 and 2^64.
-// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// Uses `xoroshiro++`, a general-purpose pseudoRNG algorithm.
 // (Signed)
 extern inline int64_t gen_rand64(RNGstate& state);
 
@@ -46,12 +49,12 @@ extern inline uint64_t gen_seed(uint64_t _min, uint64_t _max);
 
 
 // Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
-// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// Uses `xoroshiro++`, a general-purpose pseudoRNG algorithm.
 // (Unsigned)
 extern inline uint64_t gen_urandint(RNGstate& state, uint64_t _min, uint64_t _max);
 
 // Generates a high-quality, biasless, pseudorandom number from `min` to `max` (inclusive).
-// Uses `xoroshiro++`, a general purpose pseudoRNG algorithm.
+// Uses `xoroshiro++`, a general-purpose pseudoRNG algorithm.
 // (Signed)
 extern inline int64_t gen_randint(RNGstate& state, int64_t _min, int64_t _max);
 
