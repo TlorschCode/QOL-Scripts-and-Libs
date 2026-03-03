@@ -21,13 +21,22 @@ A premade thread pool class, allowing developers to easily queue multiple tasks 
     ```cpp
     myPool.queue_job( []{
         // Execute code...
-    }; );
+    });
     ```
 * Queueing a function with paramaters:
     ```cpp
-    myPool.queue_job( [=]{ // <- Change lambda capture depending on use case
-        foo(param1, ...);
-    }; );
+    myPool.queue_job( [=]{ // <- Change lambda capture depending on use case.
+        foo(/*params*/);
+    });
+    ```
+* Queueing a function and getting the return value:
+    ```cpp
+    std::future<int> future_return = myPool.queue_async_job(
+        [=]() -> int { // Change lambda capture and return type depending on use case.
+            return foo(/*params*/);
+        } 
+    );
+    future_return.get(); // Waits until foo() finishes, then returns the value that foo() returned.
     ```
 
 ### Things to Note
