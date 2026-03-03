@@ -47,7 +47,7 @@ Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is w
 *(each is sorted from fastest to slowest)*
 
 **Unbounded**:
-(Lemire's rejection sampling was forgone completely)
+(Lemire's rejection sampling was forgone completely for these tests)
 | Algorithm | ~ns/call |
 | --- | --- |
 | C++ xoroshiro++ | 0.796
@@ -58,6 +58,7 @@ Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is w
 | std::rand | 32.634
 
 **Bounded (0-100)**:
+(Using Lemire's rejection sampling)
 | Algorithm | ~ns/call |
 | --- | --- |
 | C++ xoroshiro++ | 1.053
@@ -68,6 +69,7 @@ Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is w
 | std::rand | 32.470
 
 **Bounded (0-1,000,000,123)**:
+(Using Lemire's rejection sampling)
 | Algorithm | ~ns/call |
 | --- | --- |
 | C++ xoroshiro++ | 1.071

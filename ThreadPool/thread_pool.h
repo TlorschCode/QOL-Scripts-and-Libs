@@ -86,9 +86,9 @@ public:
     */
     template<typename F>
     [[nodiscard]] auto queue_async_job(F&& func) -> std::future<std::invoke_result_t<F>> {
-        /*                                         ^^^
-                                    adds && onto whatever is passed in
-            (Taking a template type by && is called a universal/forwarding reference.)
+        /*                             ^^^
+                         adds && onto whatever is passed in
+            (note: taking a template type by && is called a universal/forwarding reference)
             
             Can collapse into lvalue, C++ reference collapse rules:
             && + & = &

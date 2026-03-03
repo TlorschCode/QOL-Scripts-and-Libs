@@ -1,5 +1,7 @@
 #include "asm_rand.h"
 #include <string>
+#include <source_location>
+#include <stdexcept>
 
 #define badRNGstate_layout_msg "Compiler added unexpected padding to RNGstate struct. Unable to access state1 at [rcx + 8]. To fix this, add `#pragma pack(push, 1)` before the RNGstate struct, and `#pragma pack(pop)` after the RNGstate struct."
 
