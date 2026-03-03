@@ -1,4 +1,4 @@
-# AsmRand
+# QuickRand
 ## Purpose
 An extremely fast C++ library allowing developers to get high quality true-random/pseudorandom numbers.
 
