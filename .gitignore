@@ -1,6 +1,6 @@
-/src/main.cpp
-./src/main.cpp
 ./*.bat
 ./*.exe
-*.cpp
 .vscode
+*.obj
+*.bat
+build
