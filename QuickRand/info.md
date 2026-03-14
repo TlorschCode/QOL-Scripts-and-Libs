@@ -26,7 +26,7 @@ The library uses two different algorithms for generating pseudorandom numbers:
 
 Both have 2^128 periods, which is much smaller than the Mersenne Twister's period of 2^19937. However, the xoroshiro algorithms are much faster <small>(see <b>Benchmarks</b> for more details)</small> and have been shown to pass some randomness tests that the Mersenne Twister has failed.
 
-Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is why both options have been provided.
+Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is why both options have been provided. All functions named `gen_seedXX()` generate true random numbers from hardware entropy, all functions ending in `...HQ()` use xoroshiro**, and all other functions use xoroshiro++ (`gen_urand64()`, for example).
 `gen_rand64()` and `gen_urandint()` use xoroshiro++, while `gen_rand64HQ()` and `gen_urandintHQ()` use xoroshiro**.
 
 `seed_state()` uses assembly's RDSEED instruction, which generates truly random numbers based off of hardware entropy. It fills state0 with the direct result of the RDSEED instruction, then fills state1 with the same result run through the splitmix64 function.
