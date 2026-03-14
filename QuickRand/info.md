@@ -24,7 +24,7 @@ The library uses two different algorithms for generating pseudorandom numbers:
 - xoroshiro++, and
 - xoroshiro**
 
-Both have $2^{128}$ periods, which is much smaller than the Mersenne Twister's period of $2^{19937}$. However, the xoroshiro algorithms are much faster <small>(see <b>Benchmarks</b> for more details)</small> and have been shown to pass some randomness tests that the Mersenne Twister has failed.
+Both have 2^128 periods, which is much smaller than the Mersenne Twister's period of 2^19937. However, the xoroshiro algorithms are much faster <small>(see <b>Benchmarks</b> for more details)</small> and have been shown to pass some randomness tests that the Mersenne Twister has failed.
 
 Xoroshiro** is better quality than xoroshiro++. However, it is slower. That is why both options have been provided.
 `gen_rand64()` and `gen_urandint()` use xoroshiro++, while `gen_rand64HQ()` and `gen_urandintHQ()` use xoroshiro**.
