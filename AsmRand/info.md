@@ -2,7 +2,7 @@
 ## Purpose
 An extremely fast x86 ASM library allowing developers to get high quality true-random/pseudorandom numbers.
 
-> *Note*: While the code can be linked and compiled with C++, it is recommended to only use this ASM library for projects which require x86 ASM. There is an identically functioning but ~2x (1 ns) faster library written in C++. You can find it in this repo under `libs/QuickRand`.
+> *Note*: While the code can be linked and compiled with C++, it is recommended to only use this ASM library for projects which require x86 ASM. There is an identically functioning but ~2x (~1 ns/call) faster library written in C++. You can find it in this repo under `libs/QuickRand`.
 > It is faster due to the extreme optimizations the compiler can apply to C++ code, some of which are not feasibly possible to implement by hand. However, in some scenarios, if **not** compiled with -O3, this ASM random generator beats the C++ version for spead
 
 </br>
